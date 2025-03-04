@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Page Title</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            font-family: Tahoma, Geneva, sans-serif;
+        }
+        table td {
+            padding: 15px;
+        }
+        table thead td {
+            background-color: #54585d;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 13px;
+            border: 1px solid #54585d;
+        }
+        table tbody td {
+            color: #636363;
+            border: 1px solid #dddfe1;
+        }
+        table tbody tr {
+            background-color: #f9fafb;
+        }
+        table tbody tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+    </style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+<table>
+    <thead>
+    <tr>
+        <td>Packages</td>
+    </tr>
+    </thead>
+    <tbody id="packages">
+
+    </tbody>
+    <div id="packages-error">
+
+    </div>
+</table>
+
+<div style="margin-top: 10px;margin-bottom: 10px"><button id="replace-list">Replace list</button><button style="margin-left: 5px" onclick="location.href='/';">Go to calculator</button></div>
+
+<div></div>
+
+<div id="packages-list"></div>
+
+
+<script>
+    function addListener() {
+        $("#packages-list").append('<input type="number" name="sizes[]" value="1" /><br>');
+    }
+
+    function submitListener() {
+        let input = document.getElementsByName('sizes[]');
+
+        let sizes = [];
+        for (let i = 0; i < input.length; i++) {
+            let a = input[i];
+            sizes.push(parseInt(a.value, 10));
+        }
+        $.ajax({
+            type: "POST",
+            url: "/package/sizes/update",
+            // The key needs to match your method's input parameter (case-sensitive).
+            data: JSON.stringify({ packages: sizes }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function(data){
+                $("#packages-list").empty();
+                $("#packages").empty();
+
+                $.each(data.packages, function(key, value)
+                {
+                    $("#packages").append("<tr><td>"+ value+"</td></tr>")
+                });
+
+            },
+            error: function(errMsg) {
+                $("#packages-list").append("<p>" + errMsg.responseJSON.error_description +"</p>");
+            }
+        });
+    }
+    $(document).ready(function () {
+        $.get("/package/sizes",function(data, status){
+            if (status !== 'success') {
+                $("#packages-error").append("<p>Error fetching package sizes!!!</p>")
+            } else {
+                $.each(data.package_sizes, function(key, value)
+                {
+                    $("#packages").append("<tr><td>"+ value+"</td></tr>")
+                });
+            }
+        });
+
+        $("#replace-list").click(function (){
+            $("#packages-list").empty();
+            let addButton = $('<input/>').attr({
+                type: "button",
+                id: "add-new",
+                value: "Add new",
+                onclick: "addListener()"
+            });
+
+            let submitButton = $('<input/>').attr({
+                type: "button",
+                id: "submit",
+                value: "Submit",
+                onclick: "submitListener()"
+            });
+
+            $("#packages-list").append(addButton);
+            $("#packages-list").append(submitButton);
+            $("#packages-list").append("<div></div>");
+            $("#packages-list").append('<input type="number" name="sizes[]" value="1" /><br>');
+
+        });
+    })
+</script>
+</body>
+</html>

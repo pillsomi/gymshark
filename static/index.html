@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Page Title</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            font-family: Tahoma, Geneva, sans-serif;
+        }
+        table td {
+            padding: 15px;
+        }
+        table thead td {
+            background-color: #54585d;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 13px;
+            border: 1px solid #54585d;
+        }
+        table tbody td {
+            color: #636363;
+            border: 1px solid #dddfe1;
+        }
+        table tbody tr {
+            background-color: #f9fafb;
+        }
+        table tbody tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+    </style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+<table>
+    <thead>
+    <tr>
+        <td>Packages</td>
+    </tr>
+    </thead>
+    <tbody id="packages">
+
+    </tbody>
+    <div id="packages-error">
+
+    </div>
+</table>
+
+<div style="margin-bottom: 10px"></div>
+
+<table>
+    <thead>
+    <tr>
+        <td colspan="2">Calculate number of boxes</td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>Items: <input type="number" min="1" id="order" value="1"></td>
+        <td><button id="calculate">Calculate</button></td>
+    </tr>
+    </tbody>
+</table>
+
+<div id="boxes"></div>
+
+<div id="calculate-error"></div>
+
+<script>
+    $(document).ready(function () {
+        $.get("/package/sizes",function(data, status){
+            if (status !== 'success') {
+                $("#packages-error").append("<p>Error fetching package sizes!!!</p>")
+            } else {
+                $.each(data.package_sizes, function(key, value)
+                {
+                    $("#packages").append("<tr><td>"+ value+"</td></tr>")
+                });
+
+                $("#packages").append("<tr><td><a href='/packages.html'>Update</a></td></tr>")
+            }
+        });
+
+        $("#calculate").click(function () {
+            let order = $("#order").val();
+            $("#calculate-error").empty();
+            $("#boxes").empty();
+            $.ajax({
+                type: "POST",
+                url: "/calculate",
+                // The key needs to match your method's input parameter (case-sensitive).
+                data: JSON.stringify({ number_of_items: parseInt(order, 10) }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(data){
+                    let element = "<table><thead><tr><td>Package Size</td><td>Number of packages</td></tr></thead>"
+                    element += "<tbody>"
+                    $.each(data.number_of_boxes, function(key, value)
+                    {
+                        element += "<tr><td>"+ value.size+"</td> <td>"+ value.number +"</td></tr>"
+                    });
+
+                    element += "</tbody></table>"
+                    $("#boxes").append(element)
+                },
+                error: function(errMsg) {
+                    $("#calculate-error").append("<p>" + errMsg.responseJSON.error_description +"</p>");
+                }
+            });
+        })
+    })
+</script>
+</body>
+</html>
