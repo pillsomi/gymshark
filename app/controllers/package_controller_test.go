@@ -127,11 +127,11 @@ func TestPackageController_CalculateNumberOfBoxes(t *testing.T) {
 			},
 			expected: []BoxDetail{
 				{
-					Size:   1,
-					Number: 1,
-				}, {
 					Size:   2,
 					Number: 2,
+				}, {
+					Size:   1,
+					Number: 1,
 				},
 			},
 		},
